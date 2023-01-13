@@ -1,4 +1,5 @@
 #! /usr/bin/env node
+// TODO: Test with each option
 import { Command } from 'commander'
 import csv from 'csvtojson'
 import { getUSDRate } from './utilities/getUSDRate'
@@ -8,7 +9,6 @@ import { z } from 'zod'
 async function main() {
   dotenv.config()
   const program = new Command()
-
   program
     .name('cryptosv')
     .version('1.0.0')
@@ -22,7 +22,6 @@ async function main() {
       'Given a date, return the portfolio value per token in USD on that date.'
     )
     .parse(process.argv)
-
   type Options = {
     token?: string
     date?: string
@@ -30,17 +29,15 @@ async function main() {
   const options: Options = program.opts()
   const token = options.token?.toUpperCase()
   const { date } = options
-
+  // Use Zod to make sure the CSV data is correct
   const transactionSchema = z.array(
     z.object({
       timestamp: z.string(),
       transaction_type: z.enum(['DEPOSIT', 'WITHDRAWAL']),
-
       // Although there are only 3 types of token in this example CSV file,
       // the real data may include more types.
       // So, just "string" type is used here.
       token: z.string(),
-
       amount: z.string(),
     })
   )
@@ -82,9 +79,10 @@ async function main() {
   for (const transaction of transactions) {
     const { transaction_type, token, amount } = transaction
     const currentBalance = balanceMap.get(token) || 0
-    let nextBalance: number
+
     const USDRate = await getUSDRate(token)
     const amountInUSD = Number(amount) * USDRate
+    let nextBalance: number
     if (transaction_type === 'DEPOSIT') {
       nextBalance = currentBalance + amountInUSD
     } else {
