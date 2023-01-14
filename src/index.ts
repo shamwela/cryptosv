@@ -78,14 +78,27 @@ async function main() {
     }
   }
 
+  const tokens = transactions.map((transaction) => transaction.token)
+  const uniqueTokens = [...new Set(tokens)]
+  // Fetch the USD rate only once for each token
+  const USDRates = new Map<string, number>()
+  for (const token of uniqueTokens) {
+    const USDRate = await getUSDRate(token)
+    USDRates.set(token, USDRate)
+  }
+
   // Token name is string
   // Balance is number
-  const balanceMap = new Map<string, number>()
-  for (const transaction of transactions) {
+  const balances = new Map<string, number>()
+  transactions.forEach((transaction) => {
     const { transaction_type, token, amount } = transaction
-    const currentBalance = balanceMap.get(token) || 0
+    const currentBalance = balances.get(token) || 0
+    const USDRate = USDRates.get(token)
 
-    const USDRate = await getUSDRate(token)
+    if (!USDRate) {
+      throw new Error('Server error')
+    }
+
     const amountInUSD = Number(amount) * USDRate
     let nextBalance: number
     if (transaction_type === 'DEPOSIT') {
@@ -94,17 +107,8 @@ async function main() {
       // WITHDRAWAL
       nextBalance = currentBalance - amountInUSD
     }
-    balanceMap.set(token, nextBalance)
-  }
-
-  // Convert the map to an array of objects
-  const balances = Array.from(balanceMap, ([token, balance]) => ({
-    token,
-    balance,
-  }))
-
-  balances.forEach(({ token, balance }) =>
-    console.log(`${token} = ${balance} USD`)
-  )
+    balances.set(token, nextBalance)
+  })
+  balances.forEach((value, key) => console.log(`${key} = ${value} USD`))
 }
 main()
