@@ -1,9 +1,10 @@
 #! /usr/bin/env node
 import { Command } from 'commander'
-import csv from 'csvtojson'
-import { getUSDRate } from './utilities/getUSDRate'
+import { getUSDRates } from './utilities/getUSDRates'
 import dotenv from 'dotenv'
 import { z } from 'zod'
+import { getTransactions } from './utilities/getTransactions'
+import { getBalances } from './utilities/getBalances'
 
 async function main() {
   dotenv.config()
@@ -28,27 +29,7 @@ async function main() {
   const options: Options = program.opts()
   const token = options.token?.toUpperCase()
   const { date } = options
-  const transactionSchema = z.array(
-    z.object({
-      timestamp: z.string(),
-      transaction_type: z.enum(['DEPOSIT', 'WITHDRAWAL']),
-      // Although there are only 3 types of token in this example CSV file,
-      // the real data may include more types.
-      // So, just "string" type is used here.
-      token: z.string(),
-      amount: z.string(),
-    })
-  )
-  type Transactions = z.infer<typeof transactionSchema>
-  let transactions: Transactions = []
-  try {
-    const csvData = await csv().fromFile('./test.csv')
-    // Parse to make sure the CSV data is correct
-    transactions = transactionSchema.parse(csvData)
-  } catch (error) {
-    console.error(error)
-    return
-  }
+  let transactions = await getTransactions()
 
   if (token) {
     transactions = transactions.filter(
@@ -77,38 +58,12 @@ async function main() {
       return
     }
   }
-
-  const tokens = transactions.map((transaction) => transaction.token)
-  const uniqueTokens = [...new Set(tokens)]
-  // Fetch the USD rate only once for each token
-  const USDRates = new Map<string, number>()
-  for (const token of uniqueTokens) {
-    const USDRate = await getUSDRate(token)
-    USDRates.set(token, USDRate)
-  }
-
-  // Token name is string
-  // Balance is number
-  const balances = new Map<string, number>()
-  transactions.forEach((transaction) => {
-    const { transaction_type, token, amount } = transaction
-    const currentBalance = balances.get(token) || 0
-    const USDRate = USDRates.get(token)
-
-    if (!USDRate) {
-      throw new Error('Server error')
-    }
-
-    const amountInUSD = Number(amount) * USDRate
-    let nextBalance: number
-    if (transaction_type === 'DEPOSIT') {
-      nextBalance = currentBalance + amountInUSD
-    } else {
-      // WITHDRAWAL
-      nextBalance = currentBalance - amountInUSD
-    }
-    balances.set(token, nextBalance)
+  const USDRates = await getUSDRates(transactions)
+  const balances = getBalances(transactions, USDRates)
+  balances.forEach((value, key) => {
+    const tokenName = key
+    const balance = value
+    console.log(`${tokenName} = ${balance} USD`)
   })
-  balances.forEach((value, key) => console.log(`${key} = ${value} USD`))
 }
 main()
