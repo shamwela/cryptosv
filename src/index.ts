@@ -1,5 +1,4 @@
 #! /usr/bin/env node
-// TODO: Test with each option
 import { Command } from 'commander'
 import csv from 'csvtojson'
 import { getUSDRate } from './utilities/getUSDRate'
@@ -29,7 +28,6 @@ async function main() {
   const options: Options = program.opts()
   const token = options.token?.toUpperCase()
   const { date } = options
-  // Use Zod to make sure the CSV data is correct
   const transactionSchema = z.array(
     z.object({
       timestamp: z.string(),
@@ -44,8 +42,9 @@ async function main() {
   type Transactions = z.infer<typeof transactionSchema>
   let transactions: Transactions = []
   try {
-    transactions = await csv().fromFile('./test.csv')
-    transactions = transactionSchema.parse(transactions)
+    const csvData = await csv().fromFile('./test.csv')
+    // Parse to make sure the CSV data is correct
+    transactions = transactionSchema.parse(csvData)
   } catch (error) {
     console.error(error)
     return
@@ -56,19 +55,25 @@ async function main() {
       (transaction) => transaction.token === token
     )
     if (transactions.length === 0) {
-      console.log(`${token} was not found in your transactions.`)
+      console.log(`"${token}" was not found in your transactions.`)
       return
     }
   }
 
   if (date) {
-    const dateObject = new Date(date)
-    const inputTimestamp = dateObject.getTime()
+    const dateInstance = new Date(date)
+    try {
+      z.date().parse(dateInstance)
+    } catch (error) {
+      console.error('Invalid date.')
+      return
+    }
+    const inputTimestamp = dateInstance.getTime()
     transactions = transactions.filter(
       (transaction) => Number(transaction.timestamp) <= inputTimestamp
     )
     if (transactions.length === 0) {
-      console.log(`There was no transaction before ${date}`)
+      console.log(`There was no transaction before ${date}.`)
       return
     }
   }
@@ -92,7 +97,7 @@ async function main() {
     balanceMap.set(token, nextBalance)
   }
 
-  // Convert the map to an array
+  // Convert the map to an array of objects
   const balances = Array.from(balanceMap, ([token, balance]) => ({
     token,
     balance,
