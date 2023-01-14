@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 import { z } from 'zod'
 import { getTransactions } from './utilities/getTransactions'
 import { getBalances } from './utilities/getBalances'
+import { printBalances } from './utilities/printBalances'
 
 async function main() {
   dotenv.config()
@@ -58,12 +59,9 @@ async function main() {
       return
     }
   }
+  // To fetch the external API as less as possible, get the USD rates first
   const USDRates = await getUSDRates(transactions)
   const balances = getBalances(transactions, USDRates)
-  balances.forEach((value, key) => {
-    const tokenName = key
-    const balance = value
-    console.log(`${tokenName} = ${balance} USD`)
-  })
+  printBalances(balances)
 }
 main()

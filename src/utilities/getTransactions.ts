@@ -12,11 +12,9 @@ const transactionSchema = z.array(
     amount: z.string(),
   })
 )
-
 export type Transactions = z.infer<typeof transactionSchema>
-
 export async function getTransactions() {
-  const filePath = './test.csv'
+  const filePath = './test.csv' // relative to where the CLI will run
   const csvData = await csv().fromFile(filePath)
   const transactions = transactionSchema.parse(csvData)
   return transactions
