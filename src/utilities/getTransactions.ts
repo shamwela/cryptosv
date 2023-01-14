@@ -17,5 +17,8 @@ export async function getTransactions() {
   const filePath = './test.csv' // relative to where the CLI will run
   const csvData = await csv().fromFile(filePath)
   const transactions = transactionSchema.parse(csvData)
+  if (transactions.length === 0) {
+    throw new Error(`The CSV file at "${filePath}" is empty.`)
+  }
   return transactions
 }
