@@ -6,6 +6,7 @@ import { getTransactions } from './utilities/getTransactions'
 import { getUSDRates } from './utilities/getUSDRates'
 import { getBalances } from './utilities/getBalances'
 import { printBalances } from './utilities/printBalances'
+import { exit } from 'process'
 
 async function main() {
   dotenv.config()
@@ -38,7 +39,7 @@ async function main() {
     )
     if (transactions.length === 0) {
       console.log(`"${token}" was not found in your transactions.`)
-      return
+      exit()
     }
   }
 
@@ -48,7 +49,7 @@ async function main() {
       z.date().parse(dateInstance)
     } catch (error) {
       console.error('Invalid date.')
-      return
+      exit()
     }
     const inputTimestamp = dateInstance.getTime()
     transactions = transactions.filter(
@@ -56,7 +57,7 @@ async function main() {
     )
     if (transactions.length === 0) {
       console.log(`There was no transaction before ${date}.`)
-      return
+      exit()
     }
   }
   // This function will fetch only once for each unique token

@@ -1,4 +1,5 @@
 import type { Transactions } from './getTransactions'
+import { exit } from 'process'
 
 export function getBalances(
   transactions: Transactions,
@@ -12,7 +13,8 @@ export function getBalances(
     const currentBalance = balances.get(token) || 0
     const USDRate = USDRates.get(token)
     if (!USDRate) {
-      throw new Error(`USD rate for ${token} was not found.`)
+      console.error(`USD rate for ${token} was not found.`)
+      exit()
     }
     const amountInUSD = Number(amount) * USDRate
     let newBalance: number

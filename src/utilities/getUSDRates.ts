@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { z } from 'zod'
 import type { Transactions } from './getTransactions'
+import { exit } from 'process'
 
 export async function getUSDRates(transactions: Transactions) {
   const tokens = transactions.map((transaction) => transaction.token)
@@ -25,6 +26,6 @@ async function getUSDRate(token: string) {
     return USD
   } catch (error) {
     console.error('Server error.')
-    throw error
+    exit()
   }
 }

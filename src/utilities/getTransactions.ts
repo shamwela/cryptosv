@@ -1,5 +1,6 @@
 import csv from 'csvtojson'
 import { z } from 'zod'
+import { exit } from 'process'
 
 const transactionSchema = z.array(
   z.object({
@@ -18,7 +19,8 @@ export async function getTransactions() {
   const csvData = await csv().fromFile(filePath)
   const transactions = transactionSchema.parse(csvData)
   if (transactions.length === 0) {
-    throw new Error(`The CSV file at "${filePath}" is empty.`)
+    console.error(`The CSV file at "${filePath}" is empty.`)
+    exit()
   }
   return transactions
 }
