@@ -8,7 +8,7 @@ const transactionSchema = z.array(
     // Although there are only 3 types of token in this example CSV file,
     // the real data may include more types.
     // So, just "string" type is used here.
-    token: z.string(),
+    token: z.string().max(10),
     amount: z.string(),
   })
 )

@@ -8,23 +8,21 @@ export function getBalances(
   // Balance is number
   const balances = new Map<string, number>()
   transactions.forEach((transaction) => {
-    const { transaction_type, token, amount } = transaction
+    const { token, amount, transaction_type } = transaction
     const currentBalance = balances.get(token) || 0
     const USDRate = USDRates.get(token)
-
     if (!USDRate) {
-      throw new Error('Server error')
+      throw new Error(`USD rate for ${token} was not found.`)
     }
-
     const amountInUSD = Number(amount) * USDRate
-    let nextBalance: number
+    let newBalance: number
     if (transaction_type === 'DEPOSIT') {
-      nextBalance = currentBalance + amountInUSD
+      newBalance = currentBalance + amountInUSD
     } else {
       // WITHDRAWAL
-      nextBalance = currentBalance - amountInUSD
+      newBalance = currentBalance - amountInUSD
     }
-    balances.set(token, nextBalance)
+    balances.set(token, newBalance)
   })
   return balances
 }

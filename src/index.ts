@@ -1,9 +1,9 @@
 #! /usr/bin/env node
-import { Command } from 'commander'
-import { getUSDRates } from './utilities/getUSDRates'
 import dotenv from 'dotenv'
+import { Command } from 'commander'
 import { z } from 'zod'
 import { getTransactions } from './utilities/getTransactions'
+import { getUSDRates } from './utilities/getUSDRates'
 import { getBalances } from './utilities/getBalances'
 import { printBalances } from './utilities/printBalances'
 
@@ -59,7 +59,7 @@ async function main() {
       return
     }
   }
-  // To fetch the external API as less as possible, get the USD rates first
+  // This function will fetch only once for each unique token
   const USDRates = await getUSDRates(transactions)
   const balances = getBalances(transactions, USDRates)
   printBalances(balances)
