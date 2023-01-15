@@ -15,4 +15,5 @@
 1. `npm i -g pnpm`
 2. `pnpm i`
 3. `pnpm build`
-4. `pnpm start` or `pnpm start --token <token>` or `pnpm start --date <date>` or add both options
+4. Create a `.env` file and add `CRYPTO_COMPARE_API_KEY`
+5. Run `pnpm start` or `pnpm start --token <token>` or `pnpm start --date <date>` or add both options
